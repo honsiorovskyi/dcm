@@ -72,6 +72,7 @@ app() {
     app_name=$1; shift 1
     args=$@
 
+    [ -f $CLOUD_DIR/$app_name.env ] && source $CLOUD_DIR/$app_name.env 
     case $command in 
         down)
             app-stop

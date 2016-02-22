@@ -1,6 +1,9 @@
 #!/bin/sh
 
 CLOUD_DIR=~/cloud
+SWARM_MANAGER_HOST=tcp://127.0.0.1:4000
+SWARM_INTERNAL_CIDR=10.4.0.253/16
+WEAVE_HOST=tcp://127.0.0.1:2375
 UP_FLAGS=-d
 STOP_FLAGS=
 RM_FLAGS="-v -f"
@@ -140,4 +143,36 @@ dns() {
     esac
 }
 
-dcm-init
+cluster-start-manager() {
+    docker -H $WEAVE_HOST run \
+        -e WEAVE_CIDR=$SWARM_INTERNAL_CIDR \
+        -p $SWARM_MANAGER_HOST:4000 \
+        --name swarm -d \
+        swarm manage -H :4000 nodes://$(weave dns-lookup swarm-cluster | awk '{ print $1":2375" }' | sed -e ':a;/$/{N;s/\n/,/;ba}')
+}
+
+cluster-stop-manager() {
+    docker -H $WEAVE_HOST rm -vf swarm
+}
+
+cluster() {
+    if [ $# -lt 1 ]; then
+       cluster-usage
+       return 1
+    fi
+
+    command=$1; shift 1
+    args=$@
+
+    case $command in 
+        start-manager)
+            start-manager
+            ;;
+        stop-manager)
+            stop-manager
+            ;;
+        *)
+            cluster-usage 
+    esac
+}
+

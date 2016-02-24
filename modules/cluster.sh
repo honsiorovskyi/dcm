@@ -25,8 +25,9 @@ cluster-usage() {
 cluster-start-manager() {
     docker -H $WEAVE_HOST run \
         -e WEAVE_CIDR=$SWARM_INTERNAL_CIDR \
-        -p $SWARM_MANAGER_HOST:4000 \
+        -p ${SWARM_MANAGER_HOST#*//}:4000 \
         --name swarm -d \
+        --restart unless-stopped \
         swarm manage -H :4000 nodes://$(weave dns-lookup swarm-cluster | awk '{ print $1":2375" }' | sed -e ':a;/$/{N;s/\n/,/;ba}')
 }
 
@@ -51,10 +52,10 @@ cluster() {
 
     case $command in 
         start-manager)
-            start-manager
+            cluster-start-manager
             ;;
         stop-manager)
-            stop-manager
+            cluster-stop-manager
             ;;
         ps)
             cluster-ps

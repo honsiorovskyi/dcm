@@ -31,7 +31,7 @@ dns() {
     fi
 
     command=$1; shift 1
-    args=$@
+    args=($@)
 
     case $command in 
         get)

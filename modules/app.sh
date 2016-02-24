@@ -74,7 +74,7 @@ app() {
 
     command=$1; shift 1
     app_name=$1; shift 1
-    args=$@
+    args=($@)
 
     [ -f $CLUSTER_DIR/$app_name.env ] && source $CLUSTER_DIR/$app_name.env 
     case $command in 

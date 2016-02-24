@@ -36,7 +36,11 @@ cluster-stop-manager() {
 }
 
 cluster-ps() {
-    DOCKER_HOST=$_DOCKER_HOST docker ps
+    DOCKER_HOST=$_DOCKER_HOST docker ps $args
+}
+
+cluster-pss() {
+    DOCKER_HOST=$_DOCKER_HOST docker ps --format '{{ .ID }}  {{ .Names }}' $args
 }
 
 cluster() {
@@ -48,7 +52,7 @@ cluster() {
     verbose-state
 
     command=$1; shift 1
-    args=$@
+    args=($@)
 
     case $command in 
         start-manager)
@@ -59,6 +63,9 @@ cluster() {
             ;;
         ps)
             cluster-ps
+            ;;
+        pss)
+            cluser-pss
             ;;
         *)
             cluster-usage 

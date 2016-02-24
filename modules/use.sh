@@ -34,7 +34,7 @@ use() {
     fi
 
     command=$1; shift 1
-    args=$@
+    args=($@)
 
     export _DCM_MGMT=$command
     case $command in 

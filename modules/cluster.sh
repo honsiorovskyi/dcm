@@ -65,7 +65,7 @@ cluster() {
             cluster-ps
             ;;
         pss)
-            cluser-pss
+            cluster-pss
             ;;
         *)
             cluster-usage 

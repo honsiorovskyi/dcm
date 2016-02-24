@@ -23,13 +23,14 @@
 app-usage() {
     echo "USAGE:"
     echo "  down <app_name> [args...]"
+    echo "  env-run <app_name> [args...] (shortcut: er)"
     echo "  pull <app_name> [args...]"
     echo "  restart <app_name> [args...]"
     echo "  scale <app_name> [args...]"
     echo "  start <app_name> [args...]"
     echo "  stop <app_name> [args...]"
     echo "  up <app_name> [args...]"
-    echo "  upd <app_name> [args...]"
+    echo "  update <app_name> [args...] (shortcut: upd)"
 }
 
 app-pull() {
@@ -65,6 +66,11 @@ app-scale() {
     DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml scale $SCALE_FLAGS $args
 }
 
+app-env-run() {
+    # NB! $app_name here represents the name of the executable to be run (e.g. docker)
+    DOCKER_HOST=$_DOCKER_HOST $app_name $args
+}
+
 
 app() {
     if [ $# -lt 2 ]; then
@@ -81,6 +87,9 @@ app() {
         down)
             app-stop
             app-rm
+            ;;
+        env-run|er)
+            app-env-run
             ;;
         pull)
             app-pull
@@ -100,7 +109,7 @@ app() {
         up)
             app-up
             ;;
-        upd)
+        update|upd)
             app-pull
             app-up
             ;;

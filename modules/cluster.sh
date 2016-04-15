@@ -20,6 +20,8 @@ cluster-usage() {
     echo "  cluster start-manager - starts Swarm Manager on the current host"
     echo "  cluster stop-manager - stops Swarm Manager on the current host"
     echo "  cluster ps - list all cluster containers"
+    echo "  cluster pss - list all cluster containers in short format"
+    echo "  cluster run <command> [args...] - run command in the cluster environment"
 }
 
 cluster-start-manager() {
@@ -27,7 +29,7 @@ cluster-start-manager() {
         -e WEAVE_CIDR=$SWARM_INTERNAL_CIDR \
         -p ${SWARM_MANAGER_HOST#*//}:4000 \
         --name swarm -d \
-        --restart unless-stopped \
+        --restart always \
         swarm manage -H :4000 nodes://$(weave dns-lookup swarm-cluster | awk '{ print $1":2375" }' | sed -e ':a;/$/{N;s/\n/,/;ba}')
 }
 
@@ -42,6 +44,11 @@ cluster-ps() {
 cluster-pss() {
     DOCKER_HOST=$_DOCKER_HOST docker ps --format '{{ .ID }}  {{ .Names }}' $args
 }
+
+cluster-run() {
+    DOCKER_HOST=$_DOCKER_HOST $args
+}
+
 
 cluster() {
     if [ $# -lt 1 ]; then
@@ -66,6 +73,9 @@ cluster() {
             ;;
         pss)
             cluster-pss
+            ;;
+        run)
+            cluster-run
             ;;
         *)
             cluster-usage 

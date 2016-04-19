@@ -8,6 +8,8 @@
 #
 # Variables used:
 #
+#   RUNTIME
+#
 #==============================================================================
 
 dns-usage() {
@@ -17,11 +19,11 @@ dns-usage() {
 }
 
 dns-get() {
-    weave dns-lookup $args
+    $RUNTIME "weave dns-lookup $args"
 }
 
 dns-list() {
-    weave status dns $args
+    $RUNTIME "weave status dns $args"
 }
 
 dns() {

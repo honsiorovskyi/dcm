@@ -6,6 +6,7 @@
 #
 #==============================================================================
 
+RUNTIME=(sh -c)
 CLUSTER_DIR=$HOME/cluster
 DEFAULT_MANAGER=swarm
 SWARM_MANAGER_HOST=tcp://127.0.0.1:4000
@@ -22,3 +23,4 @@ VERBOSE=yes
 
 # load user-defined config
 [ -f $HOME/.dcmrc ] && source $HOME/.dcmrc
+[ -f ./dcmrc ] && source ./dcmrc

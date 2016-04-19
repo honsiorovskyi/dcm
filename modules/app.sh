@@ -8,6 +8,8 @@
 #
 # Variables used:
 #
+#   RUNTIME
+#   APP_RUNTIME [internal]
 #   _DOCKER_HOST
 #   CLUSTER_DIR
 #   PULL_FLAGS
@@ -34,38 +36,36 @@ app-usage() {
 }
 
 app-pull() {
-    DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml pull $PULL_FLAGS $args
+    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml pull $PULL_FLAGS $args"
 }
 
-
 app-up() {
-    DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml up $UP_FLAGS $args
+    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml up $UP_FLAGS $args"
 }
 
 app-rm() {
-    DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml rm $RM_FLAGS $args
+    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml rm $RM_FLAGS $args"
 }
 
 app-start() {
-    DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml start $args
+    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml start $args"
 }
 
 app-stop() {
-    DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml stop $STOP_FLAGS $args
+    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml stop $STOP_FLAGS $args"
 }
 
 app-restart() {
-    DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml restart $RESTART_FLAGS $args
+    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml restart $RESTART_FLAGS $args"
 }
 
 app-logs() {
-    DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml logs $LOGS_FLAGS $args
+    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml logs $LOGS_FLAGS $args"
 }
 
 app-scale() {
-    DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml scale $SCALE_FLAGS $args
+    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml scale $SCALE_FLAGS $args"
 }
-
 
 
 app() {
@@ -78,7 +78,8 @@ app() {
     app_name=$1; shift 1
     args=($@)
 
-    [ -f $CLUSTER_DIR/$app_name.env ] && source $CLUSTER_DIR/$app_name.env 
+    APP_RUNTIME=($RUNTIME "[ -f $CLUSTER_DIR/$app_name.env ] && source $CLUSTER_DIR/$app_name.env &&
+        ([ "$VERBOSE" = "yes" -o "$VERBOSE" = "true" -o "$VERBOSE" = "1" ] && echo Using $CLUSTER_DIR/$app_name.env...) ;") 
     case $command in 
         down)
             app-stop

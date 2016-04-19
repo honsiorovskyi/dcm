@@ -8,6 +8,7 @@
 #
 # Variables used:
 #
+#   RUNTIME
 #   WEAVE_HOST
 #   WEAVE_CIDR
 #   SWARM_INTERNAL_CIDR
@@ -25,28 +26,28 @@ cluster-usage() {
 }
 
 cluster-start-manager() {
-    docker -H $WEAVE_HOST run \
+    $RUNTIME "docker -H $WEAVE_HOST run \
         -e WEAVE_CIDR=$SWARM_INTERNAL_CIDR \
         -p ${SWARM_MANAGER_HOST#*//}:4000 \
         --name swarm -d \
         --restart always \
-        swarm manage -H :4000 nodes://$(weave dns-lookup swarm-cluster | awk '{ print $1":2375" }' | sed -e ':a;/$/{N;s/\n/,/;ba}')
+        swarm manage -H :4000 nodes://$(weave dns-lookup swarm-cluster | awk '{ print $1\":2375\" }' | sed -e ':a;/$/{N;s/\n/,/;ba}')"
 }
 
 cluster-stop-manager() {
-    docker -H $WEAVE_HOST rm -vf swarm
+    $RUNTIME "docker -H $WEAVE_HOST rm -vf swarm"
 }
 
 cluster-ps() {
-    DOCKER_HOST=$_DOCKER_HOST docker ps $args
+    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker ps $args"
 }
 
 cluster-pss() {
-    DOCKER_HOST=$_DOCKER_HOST docker ps --format '{{ .ID }}  {{ .Names }}' $args
+    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker ps --format '{{ .ID }}  {{ .Names }}' $args"
 }
 
 cluster-run() {
-    DOCKER_HOST=$_DOCKER_HOST $args
+    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST $args"
 }
 
 

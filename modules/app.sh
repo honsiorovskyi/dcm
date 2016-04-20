@@ -49,18 +49,31 @@ app-create() {
     # - ipv4_address, ipv6_address
     # - ulimits
     # - volumes
-    config=/tmp/$app_name.yml
-    
+    if [ -n "$app_name" -a "$app_name" != "-" ]; then
+        config=$CLUSTER_DIR/$app_name.yml
+        if [ -e "$config" ]; then
+             echo -n "File '$config' exists. Overwrite? [y/N] "
+             read ans
+             
+             if [ "$ans" != "y" -a "$ans" != "Y" ]; then
+                echo "Skipping. Config is NOT written" 
+                return
+            fi
+        fi
+    else
+        config="/dev/stdout"
+    fi
+        
     while [ $# -ge 2 ] ; do
         option=$1; shift 1
         case ${option} in
             --name)
                 name=$1; shift 1
-                pad 0 "$name:" #>> $config
+                pad 0 "$name:" >> $config
                 ;;                
             --restart|--image|--hostname|--command|--cgroup_parent|--container_name|--entrypoint|--log-driver|--net|--pid|--stop_signal)
                 val=$1; shift 1
-                pad 4 "${option##--}: $val" #>> $config
+                pad 4 "${option##--}: $val" >> $config
                 ;;
             --volumes|--ports|--environment|--extra_hosts|--links|--cap_add|--cap_drop|--devices|--dns|--depends_on|--dns_search|--tmpfs|--env_file|--expose|--external_links|--extra_hosts|--labels|--security_opt|--volumes_from)
                 items=()
@@ -69,9 +82,9 @@ app-create() {
                     shift 1
                 done
                 
-                pad 4 "${option##--}:"
+                pad 4 "${option##--}:" >> $config
                 for (( i = 0; i < ${#items[@]}; i++ )) ; do
-                    pad 8 "- ${items[$i]}"
+                    pad 8 "- ${items[$i]}" >> $config
                 done
                 ;;
             --extends|--log_opt)
@@ -82,9 +95,9 @@ app-create() {
                     shift 1
                 done
                 
-                pad 4 "${option##--}:"
+                pad 4 "${option##--}:" >> $config
                 for (( i = 0; i < ${#items[@]}; i++ )) ; do
-                    pad 8 "${items[$i]%%:*}: ${items[$i]#*:}"
+                    pad 8 "${items[$i]%%:*}: ${items[$i]#*:}" >> $config
                 done
                 ;;
                 

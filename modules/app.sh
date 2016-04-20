@@ -35,6 +35,63 @@ app-usage() {
     echo "  app update <app_name> [args...] (shortcut: upd)"
 }
 
+pad() {
+    n=$1; shift 1
+    printf "%${n}s$*\n"
+}
+
+app-create() {
+    # NOT IMPLEMENTED:
+    # - [ version 1 only supported ]
+    # - build
+    # - logging
+    # - aliases
+    # - ipv4_address, ipv6_address
+    # - ulimits
+    # - volumes
+    config=/tmp/$app_name.yml
+    
+    while [ $# -ge 2 ] ; do
+        option=$1; shift 1
+        case ${option} in
+            --name)
+                name=$1; shift 1
+                pad 0 "$name:" #>> $config
+                ;;                
+            --restart|--image|--hostname|--command|--cgroup_parent|--container_name|--entrypoint|--log-driver|--net|--pid|--stop_signal)
+                val=$1; shift 1
+                pad 4 "${option##--}: $val" #>> $config
+                ;;
+            --volumes|--ports|--environment|--extra_hosts|--links|--cap_add|--cap_drop|--devices|--dns|--depends_on|--dns_search|--tmpfs|--env_file|--expose|--external_links|--extra_hosts|--labels|--security_opt|--volumes_from)
+                items=()
+                while [[ "$1" != --* && $# -ge 1 ]] ; do # while we didn't find another option
+                    items+=("$1")
+                    shift 1
+                done
+                
+                pad 4 "${option##--}:"
+                for (( i = 0; i < ${#items[@]}; i++ )) ; do
+                    pad 8 "- ${items[$i]}"
+                done
+                ;;
+            --extends|--log_opt)
+                # TODO: implement multilevel maps
+                items=()
+                while [[ "$1" != --* && $# -ge 1 ]] ; do # while we didn't find another option
+                    items+=("$1")
+                    shift 1
+                done
+                
+                pad 4 "${option##--}:"
+                for (( i = 0; i < ${#items[@]}; i++ )) ; do
+                    pad 8 "${items[$i]%%:*}: ${items[$i]#*:}"
+                done
+                ;;
+                
+        esac
+    done
+}
+
 app-pull() {
     $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml pull $PULL_FLAGS $args"
 }
@@ -81,6 +138,9 @@ app() {
     APP_RUNTIME=($RUNTIME "[ -f $CLUSTER_DIR/$app_name.env ] && source $CLUSTER_DIR/$app_name.env &&
         ([ "$VERBOSE" = "yes" -o "$VERBOSE" = "true" -o "$VERBOSE" = "1" ] && echo Using $CLUSTER_DIR/$app_name.env...) ;") 
     case $command in 
+        create)
+            app-create
+            ;;
         down)
             app-stop
             app-rm

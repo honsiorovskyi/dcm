@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #==============================================================================
 #
@@ -22,7 +22,7 @@
 #
 #==============================================================================
 
-app-usage() {
+app_usage() {
     echo "USAGE:"
     echo "  app down <app_name> [args...]"
     echo "  app logs <app_name> [args...]"
@@ -40,7 +40,7 @@ pad() {
     printf "%${n}s$*\n"
 }
 
-app-create() {
+app_create() {
     # NOT IMPLEMENTED:
     # - [ version 1 only supported ]
     # - build
@@ -49,9 +49,12 @@ app-create() {
     # - ipv4_address, ipv6_address
     # - ulimits
     # - volumes
+    local app_name=$1; shift
+    local config
     if [ -n "$app_name" -a "$app_name" != "-" ]; then
         config=$CLUSTER_DIR/$app_name.yml
         if [ -e "$config" ]; then
+             local ans
              echo -n "File '$config' exists. Overwrite? [y/N] "
              read ans
              
@@ -65,18 +68,18 @@ app-create() {
     fi
         
     while [ $# -ge 2 ] ; do
-        option=$1; shift 1
+        local option=$1; shift 1
         case ${option} in
             --name)
-                name=$1; shift 1
+                local name=$1; shift 1
                 pad 0 "$name:" >> $config
                 ;;                
             --restart|--image|--hostname|--command|--cgroup_parent|--container_name|--entrypoint|--log-driver|--net|--pid|--stop_signal)
-                val=$1; shift 1
+                local val=$1; shift 1
                 pad 4 "${option##--}: $val" >> $config
                 ;;
             --volumes|--ports|--environment|--extra_hosts|--links|--cap_add|--cap_drop|--devices|--dns|--depends_on|--dns_search|--tmpfs|--env_file|--expose|--external_links|--extra_hosts|--labels|--security_opt|--volumes_from)
-                items=()
+                local items=()
                 while [[ "$1" != --* && $# -ge 1 ]] ; do # while we didn't find another option
                     items+=("$1")
                     shift 1
@@ -89,7 +92,7 @@ app-create() {
                 ;;
             --extends|--log_opt)
                 # TODO: implement multilevel maps
-                items=()
+                local items=()
                 while [[ "$1" != --* && $# -ge 1 ]] ; do # while we didn't find another option
                     items+=("$1")
                     shift 1
@@ -105,85 +108,49 @@ app-create() {
     done
 }
 
-app-pull() {
-    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml pull $PULL_FLAGS $args"
-}
-
-app-up() {
-    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml up $UP_FLAGS $args"
-}
-
-app-rm() {
-    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml rm $RM_FLAGS $args"
-}
-
-app-start() {
-    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml start $args"
-}
-
-app-stop() {
-    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml stop $STOP_FLAGS $args"
-}
-
-app-restart() {
-    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml restart $RESTART_FLAGS $args"
-}
-
-app-logs() {
-    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml logs $LOGS_FLAGS $args"
-}
-
-app-scale() {
-    $APP_RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f $CLUSTER_DIR/$app_name.yml scale $SCALE_FLAGS $args"
+app_compose_cmd() {
+    local compose_cmd=$1; shift
+    local app_name=$1; shift
+    
+    local flags_varname=$(echo "app_${compose_cmd}_flags" | tr "[:lower:]" "[:upper:]")
+    local flags=${!flags_varname} || echo hello
+    
+    echo $RUNTIME "[ -f \"$CLUSTER_DIR/$app_name.env\" ] && source $CLUSTER_DIR/$app_name.env && echo 'Using $CLUSTER_DIR/$app_name.env...'; DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f ${CLUSTER_DIR}/${app_name}.yml $compose_cmd $flags $@"
+    $RUNTIME "[ -f \"$CLUSTER_DIR/$app_name.env\" ] && source $CLUSTER_DIR/$app_name.env && echo 'Using $CLUSTER_DIR/$app_name.env...'; DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f ${CLUSTER_DIR}/${app_name}.yml $compose_cmd $flags $@"
 }
 
 
 app() {
-    if [ $# -lt 2 ]; then
-       app-usage
+    if [ "$#" -lt 2 ]; then
+       app_usage
        return 1
     fi
 
-    command=$1; shift 1
-    app_name=$1; shift 1
-    args=($@)
+    local command=$1; shift 1
+    local app_name=$1; shift 1
 
-    APP_RUNTIME=($RUNTIME "[ -f $CLUSTER_DIR/$app_name.env ] && source $CLUSTER_DIR/$app_name.env &&
+    local APP_RUNTIME=($RUNTIME "[ -f \"$CLUSTER_DIR/$app_name.env\" ] && source $CLUSTER_DIR/$app_name.env &&
         ([ "$VERBOSE" = "yes" -o "$VERBOSE" = "true" -o "$VERBOSE" = "1" ] && echo Using $CLUSTER_DIR/$app_name.env...) ;") 
     case $command in 
         create)
-            app-create
+            app_create "$app_name" "$@"
             ;;
+            
         down)
-            app-stop
-            app-rm
+            app_compose_cmd stop "$app_name" "$@"
+            app_compose_cmd rm "$app_name" "$@"
             ;;
-        logs)
-            app-logs
+            
+        logs|pull|restart|scale|start|stop|up)
+            app_compose_cmd "$command" "$app_name" "$@"
             ;;
-        pull)
-            app-pull
-            ;;
-        restart)
-            app-restart
-            ;;
-        scale)
-            app-scale
-            ;;
-        start)
-            app-start
-            ;;
-        stop)
-            app-stop
-            ;;
-        up)
-            app-up
-            ;;
+            
         update|upd)
-            app-pull
-            app-up
+            app_compose_cmd pull "$app_name" "$@"
+            app_compose_cmd up "$app_name" "$@"
             ;;
+            
         *)
-            app-usage
+            app_usage
     esac
 }

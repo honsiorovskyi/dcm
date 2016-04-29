@@ -12,23 +12,23 @@
 #
 #==============================================================================
 
-dns-usage() {
+dns_usage() {
     echo "Usage:"
     echo "  dns get [args...]"
     echo "  dns list [args...]"
 }
 
-dns-get() {
-    $RUNTIME "weave dns-lookup $args"
+dns_get() {
+    $RUNTIME "weave dns_lookup $args"
 }
 
-dns-list() {
+dns_list() {
     $RUNTIME "weave status dns $args"
 }
 
 dns() {
     if [ $# -lt 1 ]; then
-       dns-usage
+       dns_usage
        return 1
     fi
 
@@ -37,13 +37,13 @@ dns() {
 
     case $command in 
         get)
-            dns-get
+            dns_get
             ;;
         list)
-            dns-list
+            dns_list
             ;;
         *)
-            dns-usage
+            dns_usage
     esac
 }
 

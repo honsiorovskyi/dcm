@@ -1,27 +1,8 @@
 #!/bin/sh
 
+# modules configuration
 MODULES=(config app cluster dns)
 MODULES_ALIASES=(cls)
-
-source ./vars.sh
-
-for module in "${MODULES[@]}"; do
-    source ./modules/${module}.sh
-done
-
-config_init
-
-
-#==============================================================================
-#
-# INITIALIZATION
-#
-# Variables used:
-#
-#   _DCM_MGMT
-#   DEFAULT_MANAGER
-#
-#==============================================================================
 
 contains() {
     local e
@@ -29,10 +10,27 @@ contains() {
     return 1
 }
 
+source ./vars.sh
 
+# load modules
+for module in "${MODULES[@]}"; do
+    source ./modules/${module}.sh
+done
+
+# load config
+if [ -n "$DEF_CONFIG" ]; then
+    config_init
+else
+    echo "Configuration module is not enabled! Exiting."
+    exit 1
+fi
+
+
+# process command line arguments if any
 if [ $# -gt 0 ]; then
     module=$1; shift 1
     
+    # if the module is not loaded, exit
     if ! contains $module ${MODULES[@]} ${MODULES_ALIASES[@]} ; then
         echo "Module '$module' not found"
         exit 1

@@ -16,6 +16,8 @@
 #
 #==============================================================================
 
+DEF_CLUSTER=1
+
 cluster_usage() {
     echo "Usage:"
     echo "  cluster start_manager - starts Swarm Manager on the current host"
@@ -39,15 +41,16 @@ cluster_stop_manager() {
 }
 
 cluster_ps() {
-    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker ps $args"
+    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker ps $@"
 }
 
 cluster_pss() {
-    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker ps --format '{{ .ID }}  {{ .Names }}' $args"
+    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST docker ps --format '{{ .ID }}  {{ .Names }}' $@"
 }
 
 cluster_run() {
-    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST $args"
+    echo $@
+    $RUNTIME "DOCKER_HOST=$_DOCKER_HOST $@"
 }
 
 
@@ -58,7 +61,6 @@ cluster() {
     fi
     
     local command=$1; shift 1
-    local args=($@)
 
     case $command in 
         start_manager)
@@ -68,17 +70,20 @@ cluster() {
             cluster_stop_manager
             ;;
         ps)
-            cluster_ps
+            cluster_ps "$@"
             ;;
         pss)
-            cluster_pss
+            cluster_pss "$@"
             ;;
         run)
-            cluster_run
+            cluster_run "$@"
             ;;
         *)
             cluster_usage 
     esac
 }
 
-alias cls='cluster'
+# short alias
+cls() {
+    cluster "$@"
+}

@@ -1,4 +1,6 @@
 
+DEF_CONFIG=1
+
 config_change_value() {
     local name=$1; shift 1
     local value=$1; shift 1
@@ -26,15 +28,16 @@ config_change_value() {
 config_usage() {
     config_print_debug
     echo
-    echo "Usage:"
-    echo "    change - change a single setting value"
-    echo "    use - change the management system used"
+    echo 'Usage:'
+    echo '    change - change a single setting value'
+    echo '    use - change the management system used'
+    echo '    dump - `cat` current config files in order they are processed by DCM'
     exit 1
 }
 
 config_print_debug() {
     if [ "$VERBOSE" = "yes" -o "$VERBOSE" = "true" -o "$VERBOSE" = "1" ]; then
-        echo "Using runtime: ${RUNTIME}, management: ${MANAGEMENT}"
+        echo "[debug] Using runtime: ${RUNTIME}, management: ${MANAGEMENT}"
     fi
 }
 
@@ -58,6 +61,13 @@ config_change() {
     config_init
 }
 
+config_dump() {
+    local config
+    for config in "${CONFIG_FILES[@]}"; do
+        [ -f "${config}" ] && echo "# --- ${config} ---" && cat "$config" && printf "\n\n"
+    done
+}
+
 config() {
     if [ $# -lt 1 ]; then
        config_usage
@@ -65,7 +75,6 @@ config() {
     fi
 
     local command=$1; shift 1
-    echo $command
 
     case $command in
         use)
@@ -73,6 +82,9 @@ config() {
             ;;
         change)
             config_change "$@"
+            ;;
+        dump)
+            config_dump
             ;;
         *)
             config_usage

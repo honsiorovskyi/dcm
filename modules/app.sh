@@ -22,6 +22,8 @@
 #
 #==============================================================================
 
+DEF_APP=1
+
 app_usage() {
     echo "USAGE:"
     echo "  app down <app_name> [args...]"
@@ -115,7 +117,7 @@ app_compose_cmd() {
     local flags_varname=$(echo "app_${compose_cmd}_flags" | tr "[:lower:]" "[:upper:]")
     local flags=${!flags_varname} || echo hello
     
-    echo $RUNTIME "[ -f \"$CLUSTER_DIR/$app_name.env\" ] && source $CLUSTER_DIR/$app_name.env && echo 'Using $CLUSTER_DIR/$app_name.env...'; DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f ${CLUSTER_DIR}/${app_name}.yml $compose_cmd $flags $@"
+    #echo $RUNTIME "[ -f \"$CLUSTER_DIR/$app_name.env\" ] && source $CLUSTER_DIR/$app_name.env && echo 'Using $CLUSTER_DIR/$app_name.env...'; DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f ${CLUSTER_DIR}/${app_name}.yml $compose_cmd $flags $@"
     $RUNTIME "[ -f \"$CLUSTER_DIR/$app_name.env\" ] && source $CLUSTER_DIR/$app_name.env && echo 'Using $CLUSTER_DIR/$app_name.env...'; DOCKER_HOST=$_DOCKER_HOST docker-compose -p $app_name -f ${CLUSTER_DIR}/${app_name}.yml $compose_cmd $flags $@"
 }
 
